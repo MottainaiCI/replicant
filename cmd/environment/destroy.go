@@ -30,7 +30,7 @@ import (
 func newEnvironmentDestroy(config *setting.Config) *cobra.Command {
 	var cmd = &cobra.Command{
 		Use:   "destroy [OPTIONS]",
-		Short: "Destroy environment",
+		Short: "Destroy a remote environment",
 		Args:  cobra.OnlyValidArgs,
 		// TODO: PreRun check of minimal args if --json is not present
 		Run: func(cmd *cobra.Command, args []string) {

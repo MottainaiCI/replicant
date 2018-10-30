@@ -35,19 +35,19 @@ import (
 func newEnvironmentApply(config *setting.Config) *cobra.Command {
 	var cmd = &cobra.Command{
 		Use:   "apply [OPTIONS]",
-		Short: "Apply a task control repository",
+		Short: "Apply a task control repository remotely",
 		Args:  cobra.OnlyValidArgs,
 		// TODO: PreRun check of minimal args if --json is not present
 		Run: func(cmd *cobra.Command, args []string) {
 			var v *viper.Viper = config.Viper
-			branch, err := cmd.Flags().GetString("branch")
+			revision, err := cmd.Flags().GetString("revision")
 			if err != nil {
-				fmt.Println("You must specify a branch")
+				fmt.Println("You must specify a revision ( or a branch e.g. origin/master ) ")
 				return
 			}
 			repopath, err := cmd.Flags().GetString("environment")
 			if err != nil {
-				fmt.Println("You must specify a branch")
+				fmt.Println("You must specify an environment to deploy ( your git control repo )")
 				return
 			}
 			client := client.NewTokenClient(v.GetString("master"), v.GetString("apikey"), config)
@@ -55,7 +55,7 @@ func newEnvironmentApply(config *setting.Config) *cobra.Command {
 			ctx.ControlRepoPath = repopath
 
 			dep := &environment.Deployment{Client: client, Context: ctx}
-			_, err = dep.Apply(branch)
+			_, err = dep.Apply(revision)
 			if err != nil {
 				fmt.Println(err)
 			}
@@ -63,7 +63,7 @@ func newEnvironmentApply(config *setting.Config) *cobra.Command {
 	}
 	cwd, _ := os.Getwd()
 	var flags = cmd.Flags()
-	flags.StringP("branch", "b", "origin/master", "Branch to deploy")
+	flags.StringP("revision", "b", "origin/master", "Branch to deploy")
 	flags.StringP("environment", "e", cwd, "Environment control repo path")
 
 	return cmd
