@@ -63,7 +63,7 @@ func newEnvironmentDeploy(config *setting.Config) *cobra.Command {
 	}
 	cwd, _ := os.Getwd()
 	var flags = cmd.Flags()
-	flags.StringP("branch", "b", "origin/master", "Branch to deploy")
+	flags.StringP("revision", "r", "origin/master", "Revision to deploy")
 	flags.StringP("environment", "e", cwd, "Environment control repo path")
 
 	return cmd
