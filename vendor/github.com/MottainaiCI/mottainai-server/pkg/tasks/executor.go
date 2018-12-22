@@ -25,6 +25,7 @@ package agenttasks
 import (
 	"errors"
 	"log"
+	"net/url"
 	"os"
 	"path"
 	"path/filepath"
@@ -62,27 +63,41 @@ type TaskExecutor struct {
 }
 
 func (d *TaskExecutor) DownloadArtefacts(artefactdir, storagedir string) error {
+	var err error
 	fetcher := d.MottainaiClient
 	task_info := DefaultTaskHandler(d.Config).FetchTask(fetcher)
-	var err error
+
 	if len(task_info.RootTask) > 0 {
 		for _, f := range strings.Split(task_info.RootTask, ",") {
 			err = fetcher.DownloadArtefactsFromTask(f, artefactdir)
+			if err != nil {
+				d.Report("Error on download artefacts from task " + f)
+				return err
+			}
 		}
 	}
 
 	if len(task_info.Namespace) > 0 {
 		for _, f := range strings.Split(task_info.Namespace, ",") {
 			err = fetcher.DownloadArtefactsFromNamespace(f, artefactdir)
+			if err != nil {
+				d.Report("Error on download namespace " + f)
+				return err
+			}
 		}
 	}
 
 	if len(task_info.Storage) > 0 {
 		for _, f := range strings.Split(task_info.Storage, ",") {
 			err = fetcher.DownloadArtefactsFromStorage(f, storagedir)
+			if err != nil {
+				d.Report("Error on download data from storage " + f)
+				return err
+			}
 		}
 	}
-	return err
+
+	return nil
 }
 
 func (d *TaskExecutor) UploadArtefacts(folder string) error {
@@ -221,7 +236,7 @@ func (d *TaskExecutor) Setup(docID string) error {
 		// TODO: This should go in a go routine and wait for ending
 		r, err := git.PlainClone(d.Context.SourceDir, false, &git.CloneOptions{
 			URL:      task_info.Source,
-			Progress: os.Stdout,
+			Progress: d,
 		})
 		if err != nil {
 			return err
@@ -247,5 +262,54 @@ func (d *TaskExecutor) Setup(docID string) error {
 	//cwd, _ := os.Getwd()
 	os.Chdir(d.Context.SourceDir)
 
+	/*
+		Setup completed create these paths:
+
+		* d.Config.RootTaskDir = <AGENT_BUILD_PATH> + '/' + <TASK_ID>
+		* tmp_buildpath = d.Config.RootTaskDir + '/temp'
+		* dir = tmp_buildpath + '/root'
+		* d.Config.ArtefactDir = tmp_buildpath + '/artefact'
+		* d.Config.StorageDir = tmp_buildpath + '/storage'
+		* d.Config.BuildDir = dir
+		* d.Config.SourceDir = tmp_buildpath + '/target_repo' (only if Source is defined)
+
+		Examples:
+
+		RootTaskDir = /mottainai/build/12345678
+		tmp_buildpath = /mottainai/build/12345678/temp
+		dir = /mottainai/build/12345678/temp/root
+		ArtefactDir = /mottainai/build/12345678/temp/artefact
+		StorageDir = /mottainai/build/12345678/temp/storage
+		BuildDir = /mottainai/build/12345678/temp/root
+		SourceDir = /mottainai/build/12345678/temp/target_repo
+
+	*/
+
 	return nil
+}
+
+// Implement Write method as io.Writer
+func (t *TaskExecutor) Write(p []byte) (int, error) {
+	t.Report(string(p[0 : len(p)-1]))
+	return len(p), nil
+}
+
+func (t *TaskExecutor) Close() error {
+	t.Report(">>>>> Execution completed")
+	return nil
+}
+
+func (t *TaskExecutor) CreateSharedImageName(task *Task) (string, error) {
+	var ans, OriginalSharedName string
+	image := task.Image
+
+	u, err := url.Parse(task.Source)
+	if err != nil {
+		OriginalSharedName = image + task.Directory
+	} else {
+		OriginalSharedName = image + u.Path + task.Directory
+	}
+
+	ans, err = utils.StrictStrip(OriginalSharedName)
+	return ans, err
 }
