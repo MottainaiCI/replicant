@@ -107,7 +107,7 @@ func (d *Deployment) Apply(revision string) (*Environment, error) {
 
 		var plan *task.Plan
 		var err error
-		if strings.HasSuffix(diff.Path, ".yaml") {
+		if strings.HasSuffix(diff.Path, ".yaml") || strings.HasSuffix(diff.Path, ".yml") {
 			plan, err = task.PlanFromYaml(path.Join(d.Context.ControlRepoPath, diff.Path))
 		} else if strings.HasSuffix(diff.Path, ".json") {
 			plan, err = task.PlanFromJSON(path.Join(d.Context.ControlRepoPath, diff.Path))
@@ -176,7 +176,7 @@ func (d *Deployment) Generate(revision string) (*Environment, error) {
 func (d *Deployment) generateFromPathHandle() func(string, os.FileInfo, error) error {
 	return func(path string, f os.FileInfo, err error) error {
 
-		if !f.IsDir() && strings.HasSuffix(f.Name(), ".yaml") {
+		if !f.IsDir() && (strings.HasSuffix(f.Name(), ".yaml") || strings.HasSuffix(f.Name(), ".yml")) {
 			plan, _ := task.PlanFromYaml(path)
 			if plan.Planned != "" {
 				fmt.Println("Plan found ", path)
