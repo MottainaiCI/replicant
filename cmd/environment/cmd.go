@@ -35,6 +35,7 @@ func NewEnvironmentCommand(config *setting.Config) *cobra.Command {
 		newEnvironmentDeploy(config),
 		newEnvironmentApply(config),
 		newEnvironmentDestroy(config),
+		newEnvironmentStatus(config),
 	)
 
 	return cmd
