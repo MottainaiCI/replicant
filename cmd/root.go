@@ -24,6 +24,7 @@ import (
 	"os"
 	//	"reflect"
 	clicommon "github.com/MottainaiCI/mottainai-cli/common"
+	logger "github.com/MottainaiCI/mottainai-server/pkg/logging"
 	common "github.com/MottainaiCI/replicant/pkg/common"
 
 	environment "github.com/MottainaiCI/replicant/cmd/environment"
@@ -67,6 +68,8 @@ func initConfig(config *setting.Config) {
 	config.Viper.SetTypeByDefaultValue(true)
 }
 
+var Logger *logger.Logger
+
 func initCommand(rootCmd *cobra.Command, config *setting.Config) {
 	var pflags = rootCmd.PersistentFlags()
 	v := config.Viper
@@ -79,9 +82,9 @@ func initCommand(rootCmd *cobra.Command, config *setting.Config) {
 	v.BindPFlag("master", rootCmd.PersistentFlags().Lookup("master"))
 	v.BindPFlag("apikey", rootCmd.PersistentFlags().Lookup("apikey"))
 	v.BindPFlag("profile", rootCmd.PersistentFlags().Lookup("profile"))
-
+	Logger = logger.New()
+	Logger.SetupWithConfig(false, config)
 	rootCmd.AddCommand(
-
 		environment.NewEnvironmentCommand(config),
 	)
 }

@@ -20,9 +20,9 @@ along with this program. If not, see <http://www.gnu.org/licenses/>.
 package environment
 
 import (
-	"fmt"
-
 	"os"
+
+	logrus "github.com/sirupsen/logrus"
 
 	setting "github.com/MottainaiCI/mottainai-server/pkg/settings"
 	common "github.com/MottainaiCI/replicant/pkg/common"
@@ -40,7 +40,10 @@ func newEnvironmentStatus(config *setting.Config) *cobra.Command {
 			//var v *viper.Viper = config.Viper
 			repopath, err := cmd.Flags().GetString("environment")
 			if err != nil {
-				fmt.Println("You must specify an environment to deploy ( your git control repo )")
+				logrus.WithFields(logrus.Fields{
+					"component": "status",
+					"error":     err,
+				}).Error("You must specify an environment to deploy ( your git control repo )")
 				return
 			}
 			//	client := client.NewTokenClient(v.GetString("master"), v.GetString("apikey"), config)

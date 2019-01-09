@@ -23,6 +23,8 @@ import (
 	"fmt"
 	"os"
 
+	logrus "github.com/sirupsen/logrus"
+
 	client "github.com/MottainaiCI/mottainai-server/pkg/client"
 	setting "github.com/MottainaiCI/mottainai-server/pkg/settings"
 	common "github.com/MottainaiCI/replicant/pkg/common"
@@ -42,12 +44,18 @@ func newEnvironmentApply(config *setting.Config) *cobra.Command {
 			var v *viper.Viper = config.Viper
 			revision, err := cmd.Flags().GetString("revision")
 			if err != nil {
-				fmt.Println("You must specify a revision ( or a branch e.g. origin/master ) ")
+				logrus.WithFields(logrus.Fields{
+					"component": "apply",
+					"error":     err,
+				}).Error("You must specify a revision ( or a branch e.g. origin/master )")
 				return
 			}
 			repopath, err := cmd.Flags().GetString("environment")
 			if err != nil {
-				fmt.Println("You must specify an environment to deploy ( your git control repo )")
+				logrus.WithFields(logrus.Fields{
+					"component": "apply",
+					"error":     err,
+				}).Error("You must specify an environment to deploy ( your git control repo )")
 				return
 			}
 			client := client.NewTokenClient(v.GetString("master"), v.GetString("apikey"), config)

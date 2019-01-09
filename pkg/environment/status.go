@@ -20,10 +20,11 @@ along with this program. If not, see <http://www.gnu.org/licenses/>.
 package environment
 
 import (
-	"fmt"
 	"os"
 	"path/filepath"
 	"strings"
+
+	logrus "github.com/sirupsen/logrus"
 
 	task "github.com/MottainaiCI/mottainai-server/pkg/tasks"
 )
@@ -72,7 +73,10 @@ func checkPlan(root string, path string, fi os.FileInfo, err error) error {
 		kind = "plan"
 	}
 
-	fmt.Println("["+kind+"]", rel)
+	logrus.WithFields(logrus.Fields{
+		"component": "environment",
+		"kind":      kind,
+	}).Info(rel)
 
 	return nil
 }

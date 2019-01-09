@@ -20,11 +20,12 @@ along with this program. If not, see <http://www.gnu.org/licenses/>.
 package environment
 
 import (
-	"fmt"
 	"os"
 	"path"
 	"path/filepath"
 	"strings"
+
+	logrus "github.com/sirupsen/logrus"
 
 	client "github.com/MottainaiCI/mottainai-server/pkg/client"
 	task "github.com/MottainaiCI/mottainai-server/pkg/tasks"
@@ -56,8 +57,10 @@ func (d *Deployment) createPlan(plan *task.Plan, state *state.State) error {
 		return err
 	}
 	state.PlanID = string(res)
-	fmt.Println("Created", state)
-
+	logrus.WithFields(logrus.Fields{
+		"component": "deploy",
+		"id":        state.PlanID,
+	}).Info("Created")
 	return state.Save(d.Context)
 }
 
@@ -66,8 +69,10 @@ func (d *Deployment) deletePlan(planID string, state *state.State) error {
 	if err != nil {
 		return err
 	}
-	fmt.Println("Deleted", planID)
-
+	logrus.WithFields(logrus.Fields{
+		"component": "deploy",
+		"id":        planID,
+	}).Info("Deleted")
 	return state.Delete(d.Context)
 }
 
@@ -77,9 +82,16 @@ func (d *Deployment) Destroy() {
 	for _, i := range tlist {
 		_, err := d.Client.GetOptions("/api/tasks/plan/delete/"+i.ID, map[string]string{})
 		if err != nil {
-			fmt.Println(err)
+			logrus.WithFields(logrus.Fields{
+				"component": "status",
+				"error":     err,
+				"id":        i.ID,
+			}).Error("Could not delete plan)")
 		}
-		fmt.Println(i.ID, "removed")
+		logrus.WithFields(logrus.Fields{
+			"component": "deploy",
+			"id":        i.ID,
+		}).Info("Deleted")
 	}
 }
 
@@ -118,7 +130,11 @@ func (d *Deployment) Apply(revision string) (*Environment, error) {
 		}
 
 		if diff.IsAdd() {
-			fmt.Println(diff.Path, plan, " Added")
+			logrus.WithFields(logrus.Fields{
+				"component": "deploy",
+				"plan":      plan,
+				"path":      diff.Path,
+			}).Info("Added")
 			st, err := state.Find(d.Context, "Source", diff.Path)
 			if err == nil {
 				// Delete with client also plan in instance
@@ -132,7 +148,10 @@ func (d *Deployment) Apply(revision string) (*Environment, error) {
 			d.createPlan(plan, newState)
 		}
 		if diff.IsDeleted() {
-			fmt.Println(diff.Path, " Deleted")
+			logrus.WithFields(logrus.Fields{
+				"component": "deploy",
+				"path":      diff.Path,
+			}).Info("Deleted")
 			st, err := state.Find(d.Context, "Source", diff.Path)
 			if err == nil {
 				// Delete with client also plan in instance
@@ -140,7 +159,12 @@ func (d *Deployment) Apply(revision string) (*Environment, error) {
 			}
 		}
 		if diff.IsModified() {
-			fmt.Println(diff.Path, plan, plan.Task, " Modified")
+			logrus.WithFields(logrus.Fields{
+				"component": "deploy",
+				"path":      diff.Path,
+				"plan":      plan,
+				"task":      plan.Task,
+			}).Info("Modified")
 			st, err := state.Find(d.Context, "Source", diff.Path)
 			if err == nil {
 				// Delete with client also plan in instance
@@ -179,14 +203,20 @@ func (d *Deployment) generateFromPathHandle() func(string, os.FileInfo, error) e
 		if !f.IsDir() && (strings.HasSuffix(f.Name(), ".yaml") || strings.HasSuffix(f.Name(), ".yml")) {
 			plan, _ := task.PlanFromYaml(path)
 			if plan.Planned != "" {
-				fmt.Println("Plan found ", path)
+				logrus.WithFields(logrus.Fields{
+					"component": "deploy",
+					"path":      path,
+				}).Info("Plan found")
 				return d.AddPlan(plan, path)
 			}
 		}
 		if !f.IsDir() && strings.HasSuffix(f.Name(), ".json") {
 			plan, _ := task.PlanFromJSON(path)
 			if plan.Planned != "" {
-				fmt.Println("Plan found ", path)
+				logrus.WithFields(logrus.Fields{
+					"component": "deploy",
+					"path":      path,
+				}).Info("Plan found")
 				return d.AddPlan(plan, path)
 			}
 		}
