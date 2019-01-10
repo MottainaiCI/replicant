@@ -47,13 +47,14 @@
   name = "github.com/MottainaiCI/mottainai-server"
   packages = [
     "pkg/client",
+    "pkg/logging",
     "pkg/namespace",
     "pkg/settings",
     "pkg/storage",
     "pkg/tasks",
     "pkg/utils"
   ]
-  revision = "b6492b63adbc59657e759829954903f6be243bf7"
+  revision = "fe389254e0448936aceba06b7c7c26fc6aa517ae"
 
 [[projects]]
   branch = "master"
@@ -107,6 +108,12 @@
   packages = ["."]
   revision = "54b27db64c180751e7049321a2e109ff220ccdcc"
   version = "v1.2.0"
+
+[[projects]]
+  name = "github.com/Unknwon/com"
+  packages = ["."]
+  revision = "41959bdd855fb7db467f78865d5f9044507df1cd"
+  version = "v2"
 
 [[projects]]
   name = "github.com/asdine/storm"
@@ -281,6 +288,12 @@
   packages = ["."]
   revision = "0ca9ea5df5451ffdf184b4428c902747c2c11cd7"
   version = "v1.0.0"
+
+[[projects]]
+  branch = "master"
+  name = "github.com/go-macaron/inject"
+  packages = ["."]
+  revision = "d8a0b8677191f4380287cfebd08e462217bac7ad"
 
 [[projects]]
   name = "github.com/gogo/protobuf"
@@ -680,6 +693,7 @@
     "openpgp/errors",
     "openpgp/packet",
     "openpgp/s2k",
+    "pbkdf2",
     "poly1305",
     "salsa20/salsa",
     "ssh",
@@ -863,6 +877,18 @@
   version = "v1.1.3"
 
 [[projects]]
+  name = "gopkg.in/ini.v1"
+  packages = ["."]
+  revision = "6ed8d5f64cd79a498d1f3fab5880cc376ce41bbe"
+  version = "v1.41.0"
+
+[[projects]]
+  name = "gopkg.in/macaron.v1"
+  packages = ["."]
+  revision = "dfcb80ca86e8534962c62812efd93209c7e600e7"
+  version = "v1.3.2"
+
+[[projects]]
   name = "gopkg.in/macaroon-bakery.v2"
   packages = [
     "bakery",
@@ -978,6 +1004,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "579c560d4262d1fca93fc26b18098441805b9cecbc3e4fb28c618d79777fe240"
+  inputs-digest = "2ae24170195702f5a38b2b8aad36b090699fba2b8e9c2bd3d2d320609c8f7f72"
   solver-name = "gps-cdcl"
   solver-version = 1
