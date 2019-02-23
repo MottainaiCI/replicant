@@ -7,7 +7,9 @@ import (
 	"time"
 
 	"cloud.google.com/go/pubsub"
+	"github.com/aws/aws-sdk-go/service/dynamodb"
 	"github.com/aws/aws-sdk-go/service/sqs"
+	"github.com/mongodb/mongo-go-driver/mongo"
 )
 
 const (
@@ -58,6 +60,7 @@ type Config struct {
 	SQS             *SQSConfig       `yaml:"sqs"`
 	Redis           *RedisConfig     `yaml:"redis"`
 	GCPPubSub       *GCPPubSubConfig `yaml:"-" ignored:"true"`
+	MongoDB         *MongoDBConfig   `yamk:"-" ignored:"ture"`
 	TLSConfig       *tls.Config
 	// NoUnixSignals - when set disables signal handling in machinery
 	NoUnixSignals bool            `yaml:"no_unix_signals" envconfig:"NO_UNIX_SIGNALS"`
@@ -78,6 +81,7 @@ type AMQPConfig struct {
 
 // DynamoDBConfig wraps DynamoDB related configuration
 type DynamoDBConfig struct {
+	Client          *dynamodb.DynamoDB
 	TaskStatesTable string `yaml:"task_states_table" envconfig:"TASK_STATES_TABLE"`
 	GroupMetasTable string `yaml:"group_metas_table" envconfig:"GROUP_METAS_TABLE"`
 }
@@ -125,7 +129,14 @@ type RedisConfig struct {
 
 // GCPPubSubConfig wraps GCP PubSub related configuration
 type GCPPubSubConfig struct {
-	Client *pubsub.Client
+	Client       *pubsub.Client
+	MaxExtension time.Duration
+}
+
+// MongoDBConfig ...
+type MongoDBConfig struct {
+	Client   *mongo.Client
+	Database string
 }
 
 // Decode from yaml to map (any field whose type or pointer-to-type implements
