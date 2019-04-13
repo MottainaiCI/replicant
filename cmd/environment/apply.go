@@ -20,7 +20,6 @@ along with this program. If not, see <http://www.gnu.org/licenses/>.
 package environment
 
 import (
-	"fmt"
 	"os"
 
 	logrus "github.com/sirupsen/logrus"
@@ -47,7 +46,7 @@ func newEnvironmentApply(config *setting.Config) *cobra.Command {
 				logrus.WithFields(logrus.Fields{
 					"component": "apply",
 					"error":     err,
-				}).Error("You must specify a revision ( or a branch e.g. origin/master )")
+				}).Fatal("You must specify a revision ( or a branch e.g. origin/master )")
 				return
 			}
 			repopath, err := cmd.Flags().GetString("environment")
@@ -55,7 +54,7 @@ func newEnvironmentApply(config *setting.Config) *cobra.Command {
 				logrus.WithFields(logrus.Fields{
 					"component": "apply",
 					"error":     err,
-				}).Error("You must specify an environment to deploy ( your git control repo )")
+				}).Fatal("You must specify an environment to deploy ( your git control repo )")
 				return
 			}
 			client := client.NewTokenClient(v.GetString("master"), v.GetString("apikey"), config)
@@ -65,7 +64,10 @@ func newEnvironmentApply(config *setting.Config) *cobra.Command {
 			dep := &environment.Deployment{Client: client, Context: ctx}
 			_, err = dep.Apply(revision)
 			if err != nil {
-				fmt.Println(err)
+				logrus.WithFields(logrus.Fields{
+					"component": "apply",
+					"error":     err,
+				}).Fatal("Error when applying the environment")
 			}
 		},
 	}

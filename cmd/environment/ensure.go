@@ -32,10 +32,10 @@ import (
 	viper "github.com/spf13/viper"
 )
 
-func newEnvironmentDeploy(config *setting.Config) *cobra.Command {
+func newEnvironmentEnsure(config *setting.Config) *cobra.Command {
 	var cmd = &cobra.Command{
-		Use:   "deploy [OPTIONS]",
-		Short: "Deploy a task control repository remotely",
+		Use:   "ensure [OPTIONS]",
+		Short: "Re-creates the environment remotely",
 		Args:  cobra.OnlyValidArgs,
 		// TODO: PreRun check of minimal args if --json is not present
 		Run: func(cmd *cobra.Command, args []string) {
@@ -43,17 +43,17 @@ func newEnvironmentDeploy(config *setting.Config) *cobra.Command {
 			revision, err := cmd.Flags().GetString("revision")
 			if err != nil {
 				logrus.WithFields(logrus.Fields{
-					"component": "deploy",
+					"component": "ensure",
 					"error":     err,
-				}).Error("You must specify a revision ( or a branch e.g. origin/master )")
+				}).Fatal("You must specify a revision ( or a branch e.g. origin/master )")
 				return
 			}
 			repopath, err := cmd.Flags().GetString("environment")
 			if err != nil {
 				logrus.WithFields(logrus.Fields{
-					"component": "deploy",
+					"component": "ensure",
 					"error":     err,
-				}).Error("You must specify an environment to deploy ( your git control repo )")
+				}).Fatal("You must specify an environment to deploy ( your git control repo )")
 				return
 			}
 			client := client.NewTokenClient(v.GetString("master"), v.GetString("apikey"), config)
@@ -61,10 +61,33 @@ func newEnvironmentDeploy(config *setting.Config) *cobra.Command {
 			ctx.ControlRepoPath = repopath
 
 			dep := &environment.Deployment{Client: client, Context: ctx}
+
+			// Validates
+			logrus.WithFields(logrus.Fields{
+				"component": "ensure",
+			}).Info("Validating your environment")
+			_, err = dep.Validate()
+			if err != nil {
+				logrus.WithFields(logrus.Fields{
+					"component": "ensure",
+					"error":     err,
+				}).Fatal("Error while validating your new desired state")
+			}
+
+			// Destroys
+			logrus.WithFields(logrus.Fields{
+				"component": "ensure",
+			}).Info("Destroying remote environment")
+			dep.Destroy()
+
+			// Generate once again
+			logrus.WithFields(logrus.Fields{
+				"component": "ensure",
+			}).Info("Generating remote environment")
 			_, err = dep.Generate(revision)
 			if err != nil {
 				logrus.WithFields(logrus.Fields{
-					"component": "deploy",
+					"component": "ensure",
 					"error":     err,
 				}).Fatal("Error while generating deployment for the supplied environment")
 			}

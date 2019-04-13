@@ -20,6 +20,7 @@ along with this program. If not, see <http://www.gnu.org/licenses/>.
 package environment
 
 import (
+	"errors"
 	"os"
 	"path"
 	"path/filepath"
@@ -38,6 +39,8 @@ type Deployment struct {
 	Client  *client.Fetcher
 	Context *common.Context
 }
+
+type PlanHandler func(plan *task.Plan, path string) error
 
 func (d *Deployment) AddPlan(plan *task.Plan, path string) error {
 	st, err := state.Find(d.Context, "Source", path)
@@ -187,37 +190,74 @@ func (d *Deployment) Generate(revision string) (*Environment, error) {
 	env.Hash = helpers.GitHash(revision, d.Context.ControlRepoPath)
 	env.Revision = revision
 	env.Save(d.Context)
-
+	_, err := d.Validate()
+	if err != nil {
+		return nil, err
+	}
 	// generate state from scratch and add plans
 	cwd, _ := os.Getwd() // for having rel paths
 	os.Chdir(d.Context.ControlRepoPath)
-	err := filepath.Walk(".", d.generateFromPathHandle())
+	err = filepath.Walk(".", d.generateFromPathHandle(d.AddPlan, func(plan *task.Plan, path string) error { return nil }))
 	os.Chdir(cwd)
 
 	return env, err
 }
 
-func (d *Deployment) generateFromPathHandle() func(string, os.FileInfo, error) error {
+func (d *Deployment) Validate() (*Environment, error) {
+	// First time generation
+	env := &Environment{}
+	var failed []string
+
+	// generate state from scratch and add plans
+	cwd, _ := os.Getwd() // for having rel paths
+	os.Chdir(d.Context.ControlRepoPath)
+	err := filepath.Walk(".", d.generateFromPathHandle(
+		func(plan *task.Plan, path string) error { return nil },
+		func(plan *task.Plan, path string) error {
+			failed = append(failed, path)
+			return nil
+		},
+	))
+	os.Chdir(cwd)
+
+	for _, v := range failed {
+		logrus.WithFields(logrus.Fields{
+			"component": "validate",
+			"path":      v,
+		}).Error("Task/Plan syntax check failed")
+	}
+	if len(failed) != 0 {
+		err = errors.New("Tasks/Plans that failed validation: " + strings.Join(failed, ", "))
+	}
+
+	return env, err
+}
+
+func (d *Deployment) generateFromPathHandle(h PlanHandler, errorHandler PlanHandler) func(string, os.FileInfo, error) error {
 	return func(path string, f os.FileInfo, err error) error {
 
 		if !f.IsDir() && (strings.HasSuffix(f.Name(), ".yaml") || strings.HasSuffix(f.Name(), ".yml")) {
-			plan, _ := task.PlanFromYaml(path)
-			if plan.Planned != "" {
+			plan, err := task.PlanFromYaml(path)
+			if err != nil {
+				return errorHandler(plan, path)
+			} else if plan.Planned != "" {
 				logrus.WithFields(logrus.Fields{
 					"component": "deploy",
 					"path":      path,
 				}).Info("Plan found")
-				return d.AddPlan(plan, path)
+				return h(plan, path)
 			}
 		}
 		if !f.IsDir() && strings.HasSuffix(f.Name(), ".json") {
-			plan, _ := task.PlanFromJSON(path)
-			if plan.Planned != "" {
+			plan, err := task.PlanFromJSON(path)
+			if err != nil {
+				return errorHandler(plan, path)
+			} else if plan.Planned != "" {
 				logrus.WithFields(logrus.Fields{
 					"component": "deploy",
 					"path":      path,
 				}).Info("Plan found")
-				return d.AddPlan(plan, path)
+				return h(plan, path)
 			}
 		}
 		return nil

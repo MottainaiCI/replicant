@@ -17,7 +17,7 @@ along with this program. If not, see <http://www.gnu.org/licenses/>.
 
 */
 
-package environment
+package validate
 
 import (
 	"os"
@@ -32,28 +32,20 @@ import (
 	viper "github.com/spf13/viper"
 )
 
-func newEnvironmentDeploy(config *setting.Config) *cobra.Command {
+func newEnvironmentValidation(config *setting.Config) *cobra.Command {
 	var cmd = &cobra.Command{
-		Use:   "deploy [OPTIONS]",
-		Short: "Deploy a task control repository remotely",
+		Use:   "repo [OPTIONS]",
+		Short: "Validates a task control repository",
 		Args:  cobra.OnlyValidArgs,
 		// TODO: PreRun check of minimal args if --json is not present
 		Run: func(cmd *cobra.Command, args []string) {
 			var v *viper.Viper = config.Viper
-			revision, err := cmd.Flags().GetString("revision")
-			if err != nil {
-				logrus.WithFields(logrus.Fields{
-					"component": "deploy",
-					"error":     err,
-				}).Error("You must specify a revision ( or a branch e.g. origin/master )")
-				return
-			}
 			repopath, err := cmd.Flags().GetString("environment")
 			if err != nil {
 				logrus.WithFields(logrus.Fields{
-					"component": "deploy",
+					"component": "validate",
 					"error":     err,
-				}).Error("You must specify an environment to deploy ( your git control repo )")
+				}).Error("You must specify an environment to validate ( your git control repo )")
 				return
 			}
 			client := client.NewTokenClient(v.GetString("master"), v.GetString("apikey"), config)
@@ -61,7 +53,7 @@ func newEnvironmentDeploy(config *setting.Config) *cobra.Command {
 			ctx.ControlRepoPath = repopath
 
 			dep := &environment.Deployment{Client: client, Context: ctx}
-			_, err = dep.Generate(revision)
+			_, err = dep.Validate()
 			if err != nil {
 				logrus.WithFields(logrus.Fields{
 					"component": "deploy",
@@ -72,7 +64,6 @@ func newEnvironmentDeploy(config *setting.Config) *cobra.Command {
 	}
 	cwd, _ := os.Getwd()
 	var flags = cmd.Flags()
-	flags.StringP("revision", "r", "origin/master", "Revision to deploy")
 	flags.StringP("environment", "e", cwd, "Environment control repo path")
 
 	return cmd

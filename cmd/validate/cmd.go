@@ -17,26 +17,22 @@ along with this program. If not, see <http://www.gnu.org/licenses/>.
 
 */
 
-package environment
+package validate
 
 import (
 	setting "github.com/MottainaiCI/mottainai-server/pkg/settings"
 	"github.com/spf13/cobra"
 )
 
-func NewEnvironmentCommand(config *setting.Config) *cobra.Command {
+func NewValidateCommand(config *setting.Config) *cobra.Command {
 
 	var cmd = &cobra.Command{
-		Use:   "environment [command] [OPTIONS]",
-		Short: "Handle replicant environments",
+		Use:   "validate [command] [OPTIONS]",
+		Short: "Validates replicant environments",
 	}
 
 	cmd.AddCommand(
-		newEnvironmentDeploy(config),
-		newEnvironmentApply(config),
-		newEnvironmentDestroy(config),
-		newEnvironmentStatus(config),
-		newEnvironmentEnsure(config),
+		newEnvironmentValidation(config),
 	)
 
 	return cmd

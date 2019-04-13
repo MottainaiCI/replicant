@@ -28,6 +28,7 @@ import (
 	common "github.com/MottainaiCI/replicant/pkg/common"
 
 	environment "github.com/MottainaiCI/replicant/cmd/environment"
+	validate "github.com/MottainaiCI/replicant/cmd/validate"
 
 	"github.com/spf13/cobra"
 	viper "github.com/spf13/viper"
@@ -86,6 +87,7 @@ func initCommand(rootCmd *cobra.Command, config *setting.Config) {
 	Logger.SetupWithConfig(false, config)
 	rootCmd.AddCommand(
 		environment.NewEnvironmentCommand(config),
+		validate.NewValidateCommand(config),
 	)
 }
 
