@@ -26,6 +26,7 @@ import (
 	"path/filepath"
 	"strings"
 
+	v1 "github.com/MottainaiCI/mottainai-server/routes/schema/v1"
 	logrus "github.com/sirupsen/logrus"
 
 	client "github.com/MottainaiCI/mottainai-server/pkg/client"
@@ -36,7 +37,7 @@ import (
 )
 
 type Deployment struct {
-	Client  *client.Fetcher
+	Client  client.HttpClient
 	Context *common.Context
 }
 
@@ -54,12 +55,11 @@ func (d *Deployment) AddPlan(plan *task.Plan, path string) error {
 }
 
 func (d *Deployment) createPlan(plan *task.Plan, state *state.State) error {
-	plan_data := plan.ToMap()
-	res, err := d.Client.GenericForm("/api/tasks/plan", plan_data)
+	res, err := d.Client.PlanCreate(plan.ToMap())
 	if err != nil {
 		return err
 	}
-	state.PlanID = string(res)
+	state.PlanID = res.ID
 	logrus.WithFields(logrus.Fields{
 		"component": "deploy",
 		"id":        state.PlanID,
@@ -68,7 +68,7 @@ func (d *Deployment) createPlan(plan *task.Plan, state *state.State) error {
 }
 
 func (d *Deployment) deletePlan(planID string, state *state.State) error {
-	_, err := d.Client.GetOptions("/api/tasks/plan/delete/"+planID, map[string]string{})
+	_, err := d.Client.PlanDelete(planID)
 	if err != nil {
 		return err
 	}
@@ -81,9 +81,16 @@ func (d *Deployment) deletePlan(planID string, state *state.State) error {
 
 func (d *Deployment) Destroy() {
 	var tlist []task.Plan
-	d.Client.GetJSONOptions("/api/tasks/planned", map[string]string{}, &tlist)
+
+	err := d.Client.Handle(client.Request{
+		Route:  v1.Schema.GetTaskRoute("plan_list"),
+		Target: &tlist,
+	})
+	if err != nil {
+		panic(err)
+	}
 	for _, i := range tlist {
-		_, err := d.Client.GetOptions("/api/tasks/plan/delete/"+i.ID, map[string]string{})
+		_, err := d.Client.PlanDelete(i.ID)
 		if err != nil {
 			logrus.WithFields(logrus.Fields{
 				"component": "status",
