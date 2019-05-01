@@ -54,19 +54,22 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:60469025a3977522e9577bd1b528ec01cfe7eebfdeac405c8771a11585e94ca5"
+  digest = "1:0f1fb2e7141b8480f674483e572a6344c5a2da0dab1fd95c86938b246ca359cc"
   name = "github.com/MottainaiCI/mottainai-server"
   packages = [
     "pkg/client",
+    "pkg/event",
     "pkg/logging",
     "pkg/namespace",
     "pkg/settings",
     "pkg/storage",
     "pkg/tasks",
     "pkg/utils",
+    "routes/schema",
+    "routes/schema/v1",
   ]
   pruneopts = "UT"
-  revision = "73afcb16408e12b57a26b9329f4cf2ed053ad0e6"
+  revision = "ce97f84b13b493bbe1f7e52cd3ad37524d45db3a"
 
 [[projects]]
   branch = "master"
@@ -522,6 +525,14 @@
   revision = "d5e5a8405ef9633c84af42fbcc734ec8dd73c198"
 
 [[projects]]
+  digest = "1:e67535e91447a130af9c055bcd01974536ce860187b766c3d15c78416c6772f1"
+  name = "github.com/juju/schema"
+  packages = ["."]
+  pruneopts = "UT"
+  revision = "29562ba24201043ee1dd1ef422ff1d16fc1cf29d"
+  version = "v1.0.0"
+
+[[projects]]
   branch = "master"
   digest = "1:4b100fcfff4c16b8cccada24d19da4826c7d36f2b6065df146eeeffc3ae7a853"
   name = "github.com/juju/webbrowser"
@@ -570,8 +581,7 @@
   version = "v1.0.1"
 
 [[projects]]
-  branch = "master"
-  digest = "1:12e36d0d371af4c3a824fcf70c72a9a06a47dc92a181f177c5bc60005939d9df"
+  digest = "1:8a6671d3e63b5e16d14d9263cb6dbb7f02eabb801a1902dc96d95f47f5f015dd"
   name = "github.com/lxc/lxd"
   packages = [
     "client",
@@ -588,7 +598,8 @@
     "shared/termios",
   ]
   pruneopts = "UT"
-  revision = "802994162fe9550ffc17a448dddde7fbf85fb4a2"
+  revision = "f51c28a3744372324480a92076dcaebf2d71ccac"
+  version = "lxd-3.12"
 
 [[projects]]
   digest = "1:c568d7727aa262c32bdf8a3f7db83614f7af0ed661474b24588de635c20024c7"
@@ -1144,6 +1155,17 @@
   version = "v1.41.0"
 
 [[projects]]
+  digest = "1:fcd8985b8b48658cec56adc8b496903729c01ae0510f6daebee2b00e17dead98"
+  name = "gopkg.in/juju/environschema.v1"
+  packages = [
+    ".",
+    "form",
+  ]
+  pruneopts = "UT"
+  revision = "d79e96fb1039e808c217847f4c45cce48e6ff2a5"
+  version = "v1.0.0"
+
+[[projects]]
   digest = "1:3d43a1d68f315a1c4c2cd20ee4d35c96695f17637502366341ac43b7813ea95f"
   name = "gopkg.in/macaron.v1"
   packages = ["."]
@@ -1152,13 +1174,14 @@
   version = "v1.3.2"
 
 [[projects]]
-  digest = "1:c444bfd08694c60973915ba5f0995b682152f235c8ba7acc59b54ef2759f25ee"
+  digest = "1:83590f2a0c660cfff66876d6adf373e162e4063c19e7f4cace1cdb9f1eba6050"
   name = "gopkg.in/macaroon-bakery.v2"
   packages = [
     "bakery",
     "bakery/checkers",
     "bakery/internal/macaroonpb",
     "httpbakery",
+    "httpbakery/form",
     "internal/httputil",
   ]
   pruneopts = "UT"
@@ -1277,6 +1300,7 @@
     "github.com/MottainaiCI/mottainai-server/pkg/logging",
     "github.com/MottainaiCI/mottainai-server/pkg/settings",
     "github.com/MottainaiCI/mottainai-server/pkg/tasks",
+    "github.com/MottainaiCI/mottainai-server/routes/schema/v1",
     "github.com/asdine/storm",
     "github.com/sirupsen/logrus",
     "github.com/spf13/cobra",
