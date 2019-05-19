@@ -54,13 +54,14 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:b1f4138d2d20d6d20944f70dbb2884f9abbb4627bd12a8d5a88085610a99c36c"
+  digest = "1:5db916f73112bd6788cd7b27d50968d1cac8e87844b1a1ac9f01c2faae610351"
   name = "github.com/MottainaiCI/mottainai-server"
   packages = [
     "pkg/client",
     "pkg/event",
     "pkg/logging",
     "pkg/namespace",
+    "pkg/secret",
     "pkg/settings",
     "pkg/storage",
     "pkg/tasks",
@@ -69,7 +70,7 @@
     "routes/schema/v1",
   ]
   pruneopts = "UT"
-  revision = "be885df2818fecbf86348ae2279505feb403f067"
+  revision = "af3bdc829fc675469f278fbd2fe7fd030086f08c"
 
 [[projects]]
   branch = "master"
