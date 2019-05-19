@@ -26,6 +26,7 @@ import (
 	"path/filepath"
 	"strings"
 
+	"github.com/MottainaiCI/mottainai-server/routes/schema"
 	v1 "github.com/MottainaiCI/mottainai-server/routes/schema/v1"
 	logrus "github.com/sirupsen/logrus"
 
@@ -82,7 +83,7 @@ func (d *Deployment) deletePlan(planID string, state *state.State) error {
 func (d *Deployment) Destroy() {
 	var tlist []task.Plan
 
-	err := d.Client.Handle(client.Request{
+	err := d.Client.Handle(schema.Request{
 		Route:  v1.Schema.GetTaskRoute("plan_list"),
 		Target: &tlist,
 	})
