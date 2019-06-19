@@ -38,13 +38,13 @@ import (
 
 const (
 	cliName = `Mottainai Replicant
-Copyright (c) 2017-2018 Mottainai
+Copyright (c) 2017-2019 Mottainai
 
 Command line interface for Mottainai replicant`
 
-	cliExamples = `$> mottainai-replicant -m http://127.0.0.1:8080 environment apply --revision origin/master
+	cliExamples = `$> replicant -m http://127.0.0.1:8080 environment apply --revision origin/master
 
-$> mottainai-cli -m http://127.0.0.1:8080 environment deploy --revision origin/master
+$> replicant -m http://127.0.0.1:8080 environment deploy --revision origin/master
 `
 )
 
