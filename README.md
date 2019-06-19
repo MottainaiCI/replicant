@@ -3,7 +3,7 @@
 Deploy Mottainai environments in your instance with a control repository.
 
     Mottainai Replicant
-    Copyright (c) 2017-2018 Mottainai
+    Copyright (c) 2017-2019 Mottainai
 
     Command line interface for Mottainai replicant
 
@@ -12,9 +12,9 @@ Deploy Mottainai environments in your instance with a control repository.
        [command]
 
     Examples:
-    $> mottainai-replicant -m http://127.0.0.1:8080 environment apply --revision origin/master
+    $> replicant -m http://127.0.0.1:8080 environment apply --revision origin/master
 
-    $> mottainai-cli -m http://127.0.0.1:8080 environment deploy --revision origin/master
+    $> replicant -m http://127.0.0.1:8080 environment deploy --revision origin/master
 
 
     Available Commands:
