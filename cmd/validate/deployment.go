@@ -21,6 +21,7 @@ package validate
 
 import (
 	"os"
+	"path"
 
 	logrus "github.com/sirupsen/logrus"
 
@@ -49,7 +50,7 @@ func newEnvironmentValidation(config *setting.Config) *cobra.Command {
 				return
 			}
 			client := client.NewTokenClient(v.GetString("master"), v.GetString("apikey"), config)
-			ctx := common.NewContext(repopath + ".replicant.db")
+			ctx := common.NewContext(path.Join(repopath, ".replicant.db"))
 			ctx.ControlRepoPath = repopath
 
 			dep := &environment.Deployment{Client: client, Context: ctx}

@@ -20,7 +20,9 @@ along with this program. If not, see <http://www.gnu.org/licenses/>.
 package environment
 
 import (
+	"fmt"
 	"os"
+	"path"
 
 	logrus "github.com/sirupsen/logrus"
 
@@ -58,7 +60,9 @@ func newEnvironmentApply(config *setting.Config) *cobra.Command {
 				return
 			}
 			client := client.NewTokenClient(v.GetString("master"), v.GetString("apikey"), config)
-			ctx := common.NewContext(repopath + ".replicant.db")
+
+			fmt.Println("Use DB file " + path.Join(repopath, ".replicant.db"))
+			ctx := common.NewContext(path.Join(repopath, ".replicant.db"))
 			ctx.ControlRepoPath = repopath
 
 			dep := &environment.Deployment{Client: client, Context: ctx}
