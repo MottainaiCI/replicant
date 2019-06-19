@@ -136,7 +136,7 @@ func (d *Deployment) Apply(revision string) (*Environment, error) {
 			plan, err = task.PlanFromJSON(path.Join(d.Context.ControlRepoPath, diff.Path))
 		}
 
-		if err != nil || plan.Planned == "" {
+		if err != nil || plan == nil || plan.Planned == "" {
 			continue
 		}
 
