@@ -20,7 +20,6 @@ along with this program. If not, see <http://www.gnu.org/licenses/>.
 package environment
 
 import (
-	"fmt"
 	"os"
 	"path"
 
@@ -61,7 +60,6 @@ func newEnvironmentApply(config *setting.Config) *cobra.Command {
 			}
 			client := client.NewTokenClient(v.GetString("master"), v.GetString("apikey"), config)
 
-			fmt.Println("Use DB file " + path.Join(repopath, ".replicant.db"))
 			ctx := common.NewContext(path.Join(repopath, ".replicant.db"))
 			ctx.ControlRepoPath = repopath
 
