@@ -19,14 +19,6 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:207d1c991e823eaa28f97c9f49f5b687e6ee45dccb012a74c6c934981ccf64a6"
-  name = "code.cloudfoundry.org/systemcerts"
-  packages = ["."]
-  pruneopts = "UT"
-  revision = "ca00b2f806f2fa1ded784ade357bad1ea3f1fbbe"
-
-[[projects]]
-  branch = "master"
   digest = "1:6da51e5ec493ad2b44cb04129e2d0a068c8fb9bd6cb5739d199573558696bb94"
   name = "github.com/Azure/go-ansiterm"
   packages = [
@@ -54,7 +46,7 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:6733fbd32e40cbbaad199b0f9bba4d360d466dd36661e641307263f1a3e82d2a"
+  digest = "1:b640a35238a2885de3dc796bc32d4745886d041e13a3e71a130c953af3045b85"
   name = "github.com/MottainaiCI/mottainai-server"
   packages = [
     "pkg/client",
@@ -70,7 +62,7 @@
     "routes/schema/v1",
   ]
   pruneopts = "UT"
-  revision = "479e3f3cd102ab5843f5ad6befb9f97fcaa1e87b"
+  revision = "b1645109b6316d34d28827049191fbce3216d144"
 
 [[projects]]
   branch = "master"
@@ -582,7 +574,7 @@
   version = "v1.0.1"
 
 [[projects]]
-  digest = "1:8a6671d3e63b5e16d14d9263cb6dbb7f02eabb801a1902dc96d95f47f5f015dd"
+  digest = "1:f0a1b339c10d2c9e62f27b8cbbc88573627d922f4d02bc348ba56cd108089ba8"
   name = "github.com/lxc/lxd"
   packages = [
     "client",
@@ -599,8 +591,8 @@
     "shared/termios",
   ]
   pruneopts = "UT"
-  revision = "f51c28a3744372324480a92076dcaebf2d71ccac"
-  version = "lxd-3.12"
+  revision = "d3ac182f55faae8f9540b6577ea78581f73a83a4"
+  version = "lxd-3.14"
 
 [[projects]]
   digest = "1:c568d7727aa262c32bdf8a3f7db83614f7af0ed661474b24588de635c20024c7"
@@ -1300,7 +1292,6 @@
     "github.com/MottainaiCI/mottainai-server/pkg/client",
     "github.com/MottainaiCI/mottainai-server/pkg/logging",
     "github.com/MottainaiCI/mottainai-server/pkg/settings",
-    "github.com/MottainaiCI/mottainai-server/pkg/storage",
     "github.com/MottainaiCI/mottainai-server/pkg/tasks",
     "github.com/MottainaiCI/mottainai-server/routes/schema",
     "github.com/MottainaiCI/mottainai-server/routes/schema/v1",
