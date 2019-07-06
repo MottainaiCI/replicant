@@ -51,10 +51,6 @@
    version = "v1.38.1"
 
 [[override]]
-  name = "github.com/RichardKnop/machinery"
-  version = "v1.5.5"
-
-[[override]]
   branch = "master"
   name = "github.com/fsouza/go-dockerclient"
 
