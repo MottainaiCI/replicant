@@ -47,6 +47,7 @@ Command line interface for Mottainai replicant`
 
 $> replicant -m http://127.0.0.1:8080 environment deploy --revision origin/master
 `
+	version = setting.MOTTAINAI_VERSION + ".1"
 )
 
 func initConfig(config *setting.Config) {
@@ -100,7 +101,7 @@ func Execute() {
 
 	var rootCmd = &cobra.Command{
 		Short:        cliName,
-		Version:      setting.MOTTAINAI_VERSION,
+		Version:      version,
 		Example:      cliExamples,
 		Args:         cobra.OnlyValidArgs,
 		SilenceUsage: true,
