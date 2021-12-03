@@ -2,3 +2,6 @@
 *.test
 *.swp
 /bin/
+cover.out
+/.idea
+*.iml
