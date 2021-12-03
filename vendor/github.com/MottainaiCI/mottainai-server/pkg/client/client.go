@@ -1,6 +1,7 @@
 /*
 
-Copyright (C) 2017-2019  Ettore Di Giacinto <mudler@gentoo.org>
+Copyright (C) 2017-2021  Ettore Di Giacinto <mudler@gentoo.org>
+                         Daniele Rondina <geaaru@sabayonlinux.org>
 Some code portions and re-implemented design are also coming
 from the Gogs project, which is using the go-macaron framework and was
 really source of ispiration. Kudos to them!
@@ -26,6 +27,7 @@ import (
 	"bytes"
 	"crypto/tls"
 	"crypto/x509"
+	"encoding/base64"
 	"encoding/json"
 	"errors"
 	"io"
@@ -40,6 +42,7 @@ import (
 	"github.com/mxk/go-flowrate/flowrate"
 
 	event "github.com/MottainaiCI/mottainai-server/pkg/event"
+	queues "github.com/MottainaiCI/mottainai-server/pkg/queues"
 	setting "github.com/MottainaiCI/mottainai-server/pkg/settings"
 	schema "github.com/MottainaiCI/mottainai-server/routes/schema"
 
@@ -51,15 +54,16 @@ var _ HttpClient = &Fetcher{}
 type HttpClient interface {
 	AppendTaskOutput(string) (event.APIResponse, error)
 
-	GetTask() ([]byte, error)
+	GetTask(string) ([]byte, error)
 	AbortTask()
-	DownloadArtefactsFromTask(string, string) error
-	DownloadArtefactsFromNamespace(string, string) error
+	DownloadArtefactsFromTask(string, string, []string) error
+	DownloadArtefactsFromNamespace(string, string, []string) error
 	DownloadArtefactsFromStorage(string, string) error
+	DownloadResource(string, io.Writer, int64) (bool, error)
 	UploadFile(string, string) error
 	FailTask(string)
 	SetTaskField(string, string) (event.APIResponse, error)
-	RegisterNode(string, string) (event.APIResponse, error)
+	RegisterNode(string, string, bool, map[string]int, []string, int) (event.APIResponse, error)
 	Doc(string)
 	SetUploadChunkSize(int)
 	SetupTask() (event.APIResponse, error)
@@ -81,10 +85,12 @@ type HttpClient interface {
 	SetAgent(a *anagent.Anagent)
 	SetActiveReport(b bool)
 	SetToken(t string)
-	HandleRaw(req schema.Request, fn func(io.ReadCloser) error) error
-	Handle(req schema.Request) error
-	HandleAPIResponse(req schema.Request) (event.APIResponse, error)
-	HandleUploadLargeFile(request schema.Request, paramName string, filePath string, chunkSize int) error
+	SetBasicUsername(u string)
+	SetBasicPassword(p string)
+	HandleRaw(req *schema.Request, fn func(io.ReadCloser) error) error
+	Handle(req *schema.Request) error
+	HandleAPIResponse(req *schema.Request) (event.APIResponse, error)
+	HandleUploadLargeFile(request *schema.Request, paramName string, filePath string, chunkSize int) error
 	TaskLog(id string) ([]byte, error)
 	TaskDelete(id string) (event.APIResponse, error)
 	SetTaskStatus(status string) (event.APIResponse, error)
@@ -130,12 +136,26 @@ type HttpClient interface {
 	NamespaceFileList(namespace string) ([]string, error)
 	StorageFileList(storage string) ([]string, error)
 	TaskFileList(task string) ([]string, error)
-	DownloadArtefactsGeneric(id, target, artefact_type string) error
+	DownloadArtefactsGeneric(id, target, artefact_type string, filters []string) error
 	Download(url, where string) (bool, error)
 
 	SecretDelete(id string) (event.APIResponse, error)
 	SecretEdit(data map[string]interface{}) (event.APIResponse, error)
 	SecretCreate(t string) (event.APIResponse, error)
+
+	// NodeQueue methods
+	NodeQueueCreate(agentKey, nodeId string, queues map[string][]string) (event.APIResponse, error)
+	NodeQueueDelete(agentKey, nodeId string) (event.APIResponse, error)
+	NodeQueueAddTask(agentKey, nodeId, queue, taskid string) (event.APIResponse, error)
+	NodeQueueDelTask(agentKey, nodeId, queue, taskid string) (event.APIResponse, error)
+	NodeQueueGetTasks(id string) (queues.NodeQueues, error)
+
+	// Queue methods
+	QueueCreate(name string) (event.APIResponse, error)
+	QueueDelete(qid string) (event.APIResponse, error)
+	QueueGetQid(name string) (string, error)
+	QueueAddTaskInProgress(qid, taskid string) (event.APIResponse, error)
+	QueueDelTaskInProgress(qid, taskid string) (event.APIResponse, error)
 }
 
 type Fetcher struct {
@@ -146,6 +166,8 @@ type Fetcher struct {
 	Token string
 	// TODO: this could be handled directly from Config
 	TrustedCert   string
+	Username      string
+	Pass          string
 	Jar           *http.CookieJar
 	Agent         *anagent.Anagent
 	ActiveReports bool
@@ -156,6 +178,14 @@ func NewTokenClient(host, token string, config *setting.Config) HttpClient {
 	f := NewBasicClient(config)
 	f.SetBaseURL(host)
 	f.SetToken(token)
+	return f
+}
+
+func NewBasicAuthClient(host, user, pass string, config *setting.Config) HttpClient {
+	f := NewBasicClient(config)
+	f.SetBaseURL(host)
+	f.SetBasicUsername(user)
+	f.SetBasicPassword(pass)
 	return f
 }
 
@@ -202,6 +232,14 @@ func (f *Fetcher) SetActiveReport(b bool) {
 }
 func (f *Fetcher) SetToken(t string) {
 	f.Token = t
+}
+
+func (f *Fetcher) SetBasicUsername(u string) {
+	f.Username = u
+}
+
+func (f *Fetcher) SetBasicPassword(p string) {
+	f.Pass = p
 }
 
 func (f *Fetcher) Doc(id string) {
@@ -251,11 +289,17 @@ func (f *Fetcher) SetUploadChunkSize(s int) {
 func (f *Fetcher) setAuthHeader(r *http.Request) *http.Request {
 	if len(f.Token) > 0 {
 		r.Header.Add("Authorization", "token "+f.Token)
+	} else if len(f.Username) > 0 && len(f.Pass) > 0 {
+		r.Header.Add("Authorization", "Basic "+
+			base64.StdEncoding.EncodeToString(
+				[]byte(f.Username+":"+f.Pass),
+			))
 	}
 	return r
 }
 
-func (f *Fetcher) HandleRaw(req schema.Request, fn func(io.ReadCloser) error) error {
+func (f *Fetcher) HandleRaw(req *schema.Request, fn func(io.ReadCloser) error) error {
+	var err error
 
 	hclient := f.newHttpClient()
 	baseurl := f.BaseURL + f.Config.GetWeb().BuildURI("")
@@ -266,23 +310,35 @@ func (f *Fetcher) HandleRaw(req schema.Request, fn func(io.ReadCloser) error) er
 
 	f.setAuthHeader(request)
 
-	response, err := hclient.Do(request)
+	req.Response, err = hclient.Do(request)
 	if err != nil {
 		return err
 	}
-	defer response.Body.Close()
+	defer req.Response.Body.Close()
 
-	return fn(response.Body)
+	return fn(req.Response.Body)
 }
 
-func (f *Fetcher) Handle(req schema.Request) error {
+func (f *Fetcher) Handle(req *schema.Request) error {
 	return f.HandleRaw(req, func(b io.ReadCloser) error {
-		return json.NewDecoder(b).Decode(req.Target)
+		buf := new(bytes.Buffer)
+		n, err := buf.ReadFrom(b)
+		if n == 0 {
+			return errors.New("Received empty response from server")
+		} else if err != nil {
+			return err
+		}
+
+		req.ResponseRaw = buf.Bytes()
+
+		return json.Unmarshal(req.ResponseRaw, req.Target)
 	})
 }
 
-func (f *Fetcher) HandleAPIResponse(req schema.Request) (event.APIResponse, error) {
-	resp := &event.APIResponse{}
+func (f *Fetcher) HandleAPIResponse(req *schema.Request) (event.APIResponse, error) {
+	resp := &event.APIResponse{
+		Request: req,
+	}
 	req.Target = resp
 	err := f.Handle(req)
 	if err != nil {
@@ -292,7 +348,7 @@ func (f *Fetcher) HandleAPIResponse(req schema.Request) (event.APIResponse, erro
 	return *resp, nil
 }
 
-func (f *Fetcher) HandleUploadLargeFile(request schema.Request, paramName string, filePath string, chunkSize int) error {
+func (f *Fetcher) HandleUploadLargeFile(request *schema.Request, paramName string, filePath string, chunkSize int) error {
 
 	option := request.Options
 	baseurl := f.BaseURL + f.Config.GetWeb().BuildURI("")
@@ -372,7 +428,7 @@ func (f *Fetcher) HandleUploadLargeFile(request schema.Request, paramName string
 
 	// XXX: Yeah, this is just a fancier way of reading slowly from kernel buffers, i know.
 	if f.Config.GetAgent().UploadRateLimit != 0 {
-		f.AppendTaskOutput("Upload with bandwidth limit of: " + strconv.FormatInt(1024*f.Config.GetAgent().UploadRateLimit, 10))
+		f.AppendTaskOutput("Upload with bandwidth limit of: " + strconv.FormatInt(1024*f.Config.GetAgent().UploadRateLimit, 10) + "\n")
 		reader := flowrate.NewReader(io.Reader(rd), 1024*f.Config.GetAgent().UploadRateLimit)
 		request.Body = reader
 		req, err = request.NewAPIHTTPRequest(baseurl)
@@ -399,6 +455,7 @@ func (f *Fetcher) HandleUploadLargeFile(request schema.Request, paramName string
 		return err
 	}
 	defer resp.Body.Close()
+	req.Response = resp
 
 	body := &bytes.Buffer{}
 	_, err = body.ReadFrom(resp.Body)

@@ -1,6 +1,7 @@
 /*
 
-Copyright (C) 2018  Ettore Di Giacinto <mudler@gentoo.org>
+Copyright (C) 2018-2021  Ettore Di Giacinto <mudler@gentoo.org>
+                         Daniele Rondina <geaaru@gmail.com>
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -83,7 +84,7 @@ func (d *Deployment) deletePlan(planID string, state *state.State) error {
 func (d *Deployment) Destroy() {
 	var tlist []task.Plan
 
-	err := d.Client.Handle(schema.Request{
+	err := d.Client.Handle(&schema.Request{
 		Route:  v1.Schema.GetTaskRoute("plan_list"),
 		Target: &tlist,
 	})
