@@ -22,6 +22,7 @@ package cmd
 import (
 	"fmt"
 	"os"
+
 	//	"reflect"
 	clicommon "github.com/MottainaiCI/mottainai-cli/common"
 	logger "github.com/MottainaiCI/mottainai-server/pkg/logging"
@@ -38,7 +39,7 @@ import (
 
 const (
 	cliName = `Mottainai Replicant
-Copyright (c) 2017-2019 Mottainai
+Copyright (c) 2017-2021 Mottainai
 
 Command line interface for Mottainai replicant`
 
