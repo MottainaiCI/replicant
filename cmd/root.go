@@ -24,7 +24,7 @@ import (
 	"os"
 
 	//	"reflect"
-	clicommon "github.com/MottainaiCI/mottainai-cli/common"
+	clicommon "github.com/MottainaiCI/mottainai-server/mottainai-cli/common"
 	logger "github.com/MottainaiCI/mottainai-server/pkg/logging"
 	common "github.com/MottainaiCI/replicant/pkg/common"
 
